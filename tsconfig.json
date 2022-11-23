@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "outDir": "./lib",
+        "allowJs": false,
+        "target": "es2016",
+        "alwaysStrict": true,
+        "skipLibCheck": false,
+        "module": "commonjs"
+    },
+    "include": [
+        "src/*.ts",
+        "src/*/*.ts",
+        "tests/**/*.ts",
+        "index.ts",
+    ]
+}
