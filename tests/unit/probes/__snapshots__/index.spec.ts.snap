@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Probe buildProbe should throw if unknown probe type 1`] = `"unsupported probe type 'unknown'"`;
