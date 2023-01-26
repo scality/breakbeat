@@ -20,6 +20,10 @@ export class CircuitBreaker {
     _stabilizeThreshold: number;
     _evaluateTimeoutHandle: NodeJS.Timeout | null;
 
+    // a promise that unit tests can await on, as jest's fake timers
+    // get confused with async flows
+    _evaluatingPromiseHook: Promise<unknown> | null;
+
     constructor(config: unknown) {
         this._config = validate(config);
         this._probes = (this._config.probes || []).map(buildProbe);
@@ -35,6 +39,7 @@ export class CircuitBreaker {
         };
 
         this._evaluateTimeoutHandle = null;
+        this._evaluatingPromiseHook = null;
     }
 
     get state(): BreakerState {
@@ -53,9 +58,12 @@ export class CircuitBreaker {
         }
     }
 
-    _evaluate() {
-        const allOk = this._probes
-            .every(probe => probe.value);
+    async _evaluate() {
+        this._evaluatingPromiseHook = Promise.allSettled(this._probes.map(p => p.check()));
+        await this._evaluatingPromiseHook;
+        this._evaluatingPromiseHook = null;
+
+        const allOk = this._probes.every(probe => probe.value);
 
         if (allOk) {
             switch (this._aggregateState) {
@@ -87,7 +95,7 @@ export class CircuitBreaker {
 
     _scheduleNextEvaluation() {
         this._evaluateTimeoutHandle = setTimeout(
-            () => this._evaluate(),
+            () => void this._evaluate(),
             this._evaluateIntervalMs,
         );
     }

@@ -1,4 +1,4 @@
 export interface Probe {
-    check(): void;
+    check(): Promise<void>;
     get value(): boolean;
 }
