@@ -35,7 +35,9 @@
   "dependencies": {
     "@hapi/joi": "^17.1.1",
     "@types/node": "^18.11.11",
-    "joi-extract-type": "^15.0.8"
+    "joi-extract-type": "^15.0.8",
+    "prometheus-query": "^3.3.0",
+    "werelogs": "scality/werelogs"
   },
   "engines": {
     "node": ">= 16"
