@@ -16,8 +16,8 @@ export class NoopProbe implements Probe {
         this.config = config;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    check() {
+    check(): Promise<void> {
+        return Promise.resolve();
     }
 
     get value() {

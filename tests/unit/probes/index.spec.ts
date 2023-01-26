@@ -22,6 +22,11 @@ describe('Probe', () => {
             test('should build a noop probe', () => {
                 const kcl = buildProbe({
                     type: 'kafkaConsumerLag',
+                    consumerGroupName: 'group',
+                    wantTotalLagLessThan: 15,
+                    prometheus: {
+                        endpoint: 'http://localhost:9090',
+                    },
                 });
 
                 expect(kcl).toBeInstanceOf(KafkaConsumerLagProbe);

@@ -21,9 +21,9 @@ describe('CircuitBreaker', () => {
             expect(() => new CircuitBreaker({})).not.toThrow();
         });
 
-        test('should always be in nominal state', () => {
+        test('should always be in nominal state', async () => {
             b = new CircuitBreaker({});
-            b._evaluate();
+            await b._evaluate();
             expect(b.state).toStrictEqual(BreakerState.Nominal);
         });
     });
@@ -33,9 +33,9 @@ describe('CircuitBreaker', () => {
             expect(() => new CircuitBreaker(undefined)).not.toThrow();
         });
 
-        test('should always be in nominal state', () => {
+        test('should always be in nominal state', async () => {
             b = new CircuitBreaker(undefined);
-            b._evaluate();
+            await b._evaluate();
             expect(b.state).toStrictEqual(BreakerState.Nominal);
         });
     });
@@ -48,7 +48,7 @@ describe('CircuitBreaker', () => {
     });
 
     describe('_evaluate', () => {
-        test('should set state to nominal if all probes evaluate to true', () => {
+        test('should set state to nominal if all probes evaluate to true', async () => {
             const config = {
                 probes: [
                     {
@@ -58,11 +58,11 @@ describe('CircuitBreaker', () => {
                 ],
             };
             b = new CircuitBreaker(config);
-            b._evaluate();
+            await b._evaluate();
             expect(b.state).toStrictEqual(BreakerState.Nominal);
         });
 
-        test('should set state to tripped if one probe evaluates to false', () => {
+        test('should set state to tripped if one probe evaluates to false', async () => {
             const config = {
                 probes: [
                     {
@@ -76,11 +76,11 @@ describe('CircuitBreaker', () => {
                 ],
             };
             b = new CircuitBreaker(config);
-            b._evaluate();
+            await b._evaluate();
             expect(b.state).toStrictEqual(BreakerState.Tripped);
         });
 
-        test('should set state to stabilizing if all probes evaluate to true after being tripped', () => {
+        test('should set state to stabilizing if all probes evaluate to true after being tripped', async () => {
             const config = {
                 probes: [
                     {
@@ -91,11 +91,11 @@ describe('CircuitBreaker', () => {
             };
             b = new CircuitBreaker(config);
             b._aggregateState = BreakerState.Tripped;
-            b._evaluate();
+            await b._evaluate();
             expect(b.state).toStrictEqual(BreakerState.Stabilizing);
         });
 
-        test('should set state to nominal if all probes evaluate to true N times while stabilizing', () => {
+        test('should set state to nominal if all probes evaluate to true N times while stabilizing', async () => {
             const config = {
                 probes: [
                     {
@@ -109,14 +109,14 @@ describe('CircuitBreaker', () => {
 
             b._aggregateState = BreakerState.Tripped;
 
-            b._evaluate();
+            await b._evaluate();
             expect(b.state).toStrictEqual(BreakerState.Stabilizing);
 
-            b._evaluate();
+            await b._evaluate();
             expect(b.state).toStrictEqual(BreakerState.Nominal);
         });
 
-        test('should schedule next evaluation if started', () => {
+        test('should schedule next evaluation if started', async () => {
             const config = {
                 probes: [
                     {
@@ -130,12 +130,12 @@ describe('CircuitBreaker', () => {
 
             const s = jest.spyOn(b, '_scheduleNextEvaluation');
 
-            b._evaluate();
+            await b._evaluate();
             expect(b._evaluateTimeoutHandle).toBeTruthy();
             expect(s).toBeCalled();
         });
 
-        test('should not schedule next evaluation if not started', () => {
+        test('should not schedule next evaluation if not started', async () => {
             const config = {
                 probes: [
                     {
@@ -147,7 +147,7 @@ describe('CircuitBreaker', () => {
             b = new CircuitBreaker(config);
             const s = jest.spyOn(b, '_scheduleNextEvaluation');
 
-            b._evaluate();
+            await b._evaluate();
             expect(b._evaluateTimeoutHandle).toBeFalsy();
             expect(s).not.toBeCalled();
         });
@@ -170,7 +170,7 @@ describe('CircuitBreaker', () => {
             expect(b._evaluateTimeoutHandle).toBeTruthy();
         });
 
-        test('should periodically evaluate', () => {
+        test('should periodically evaluate', async () => {
             const config = {
                 probes: [
                     {
@@ -185,13 +185,16 @@ describe('CircuitBreaker', () => {
 
             b.start();
 
+            await b._evaluatingPromiseHook;
             jest.advanceTimersByTime(defaultProbeEvaluateInterval + 1);
             expect(s).toBeCalledTimes(1);
+
+            await b._evaluatingPromiseHook;
             jest.advanceTimersByTime(defaultProbeEvaluateInterval);
             expect(s).toBeCalledTimes(2);
         });
 
-        test('should periodically evaluate using appropriate interval for state', () => {
+        test('should periodically evaluate using appropriate interval for state', async () => {
             const config = {
                 probes: [
                     {
@@ -207,10 +210,15 @@ describe('CircuitBreaker', () => {
 
             b.start();
 
+            await b._evaluatingPromiseHook;
             jest.advanceTimersByTime(defaultProbeEvaluateInterval + 1);
             expect(s).toBeCalledTimes(1);
+
+            await b._evaluatingPromiseHook;
             jest.advanceTimersByTime(defaultProbeEvaluateInterval);
             expect(s).toBeCalledTimes(1);
+
+            await b._evaluatingPromiseHook;
             jest.advanceTimersByTime(defaultProbeEvaluateInterval);
             expect(s).toBeCalledTimes(2);
         });
