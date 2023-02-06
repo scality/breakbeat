@@ -11,9 +11,9 @@
     "build": "tsc",
     "coverage": "nyc --clean jest --coverage --detectOpenHandles",
     "lint": "eslint .",
-    "!prepack": "yarn build",
-    "prepare": "yarn build",
-    "postinstall": "yarn build",
+    "prepack": "yarn --verbose build",
+    "prepare": "yarn --verbose build",
+    "postinstall": "yarn --verbose build",
     "test": "jest --detectOpenHandles",
     "test:watch": "jest --watch"
   },
