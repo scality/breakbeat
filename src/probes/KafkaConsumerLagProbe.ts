@@ -1,7 +1,7 @@
 import * as joi from '@hapi/joi';
 import 'joi-extract-type';
 
-import { Probe } from './Probe';
+import { PrometheusQueryProbe } from './PrometheusQueryProbe';
 import { PrometheusClient, prometheusClientConfigSchema } from './PrometheusClient';
 
 import { Logger } from 'werelogs';
@@ -21,11 +21,7 @@ export const kafkaConsumerLagProbeSchema = joi.object({
 
 export type KafkaConsumerLagProbeConfig = joi.extractType<typeof kafkaConsumerLagProbeSchema>;
 
-export class KafkaConsumerLagProbe implements Probe {
-    config: KafkaConsumerLagProbeConfig;
-    lag: number;
-    prometheusClient: PrometheusClient;
-
+export class KafkaConsumerLagProbe extends PrometheusQueryProbe {
     constructor(config: KafkaConsumerLagProbeConfig) {
         const topic = config.topicName ? `,topic="${config.topicName}"` : '';
         const q = `kafka_consumergroup_group_lag{
@@ -33,24 +29,12 @@ export class KafkaConsumerLagProbe implements Probe {
             ${topic}
         }`;
 
-        this.prometheusClient = new PrometheusClient(
-            config.prometheus, q, config.averagedOverInterval);
-        this.config = config;
-        this.lag = 0;
-    }
-
-    async check() {
-        const v = await this.prometheusClient.instantQuery();
-        if (v != null) {
-            if (Number.isNaN(v)) {
-                log.warn('warning: ignoring received NaN value (interval too long for retention?)');
-                return;
-            }
-            this.lag = v;
-        }
-    }
-
-    get value() {
-        return this.lag < this.config.wantTotalLagLessThan;
+        super({
+            type: "prometheusQuery",
+            prometheus: config.prometheus,
+            query: q,
+            threshold: config.wantTotalLagLessThan,
+            averagedOverInterval: config.averagedOverInterval,
+        });
     }
 }
