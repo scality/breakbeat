@@ -4,6 +4,7 @@ import { buildProbe } from '../../../src/probes';
 
 import { NoopProbe } from '../../../src/probes/NoopProbe';
 import { KafkaConsumerLagProbe } from '../../../src/probes/KafkaConsumerLagProbe';
+import { PrometheusQueryProbe } from '../../../src/probes/PrometheusQueryProbe';
 
 describe('Probe', () => {
     describe('buildProbe', () => {
@@ -19,7 +20,7 @@ describe('Probe', () => {
         });
 
         describe('kafkaConsumerLag', () => {
-            test('should build a noop probe', () => {
+            test('should build a kafkaConsumerLag probe', () => {
                 const kcl = buildProbe({
                     type: 'kafkaConsumerLag',
                     consumerGroupName: 'group',
@@ -30,6 +31,22 @@ describe('Probe', () => {
                 });
 
                 expect(kcl).toBeInstanceOf(KafkaConsumerLagProbe);
+            });
+        });
+
+        describe('prometheusQuery', () => {
+            test('should build a prometheusQuery probe', () => {
+                const kcl = buildProbe({
+                    type: 'prometheusQuery',
+                    query: 'mem{process="node"}',
+                    threshold: 15,
+                    prometheus: {
+                        endpoint: 'http://localhost:9090',
+                        timeout: 10000,
+                    },
+                });
+
+                expect(kcl).toBeInstanceOf(PrometheusQueryProbe);
             });
         });
 
