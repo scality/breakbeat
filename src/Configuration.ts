@@ -8,10 +8,10 @@ export const defaultStabilizeAfterNSuccesses = 2;
 
 const topSchema = joi.object({
     probes: joi.array().items(probeSchema).optional(),
-    nominalEvaluateIntervalMs: joi.number().default(defaultProbeEvaluateInterval).optional(),
-    trippedEvaluateIntervalMs: joi.number().default(defaultProbeEvaluateInterval).optional(),
-    stabilizingEvaluateIntervalMs: joi.number().default(defaultProbeEvaluateInterval).optional(),
-    stabilizeAfterNSuccesses: joi.number().default(defaultStabilizeAfterNSuccesses).optional(),
+    nominalEvaluateIntervalMs: joi.number().positive().default(defaultProbeEvaluateInterval).optional(),
+    trippedEvaluateIntervalMs: joi.number().positive().default(defaultProbeEvaluateInterval).optional(),
+    stabilizingEvaluateIntervalMs: joi.number().positive().default(defaultProbeEvaluateInterval).optional(),
+    stabilizeAfterNSuccesses: joi.number().positive().default(defaultStabilizeAfterNSuccesses).optional(),
 });
 
 export type Config = joi.extractType<typeof topSchema>;
