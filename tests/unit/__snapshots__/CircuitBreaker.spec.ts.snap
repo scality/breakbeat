@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CircuitBreaker should throw if config does not validate 1`] = `""probes" must be an array"`;
