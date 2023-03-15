@@ -17,6 +17,8 @@ module.exports = {
     root: true,
     ignorePatterns: [
         '*.js',
+        '*.d.ts',
+        '*.spec.ts',
     ],
     rules: {
         'strict': [2, 'global'],
