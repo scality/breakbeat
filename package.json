@@ -10,6 +10,8 @@
     "build": "tsc --strict",
     "coverage": "nyc --clean jest --coverage --detectOpenHandles",
     "lint": "eslint .",
+    "postinstall": "yarn build",
+    "prepack": "yarn build",
     "prepare": "yarn build",
     "test": "jest --detectOpenHandles",
     "test:watch": "jest --watch"
@@ -26,14 +28,14 @@
     "jest": "^29.3.1",
     "nyc": "^15.1.0",
     "ts-jest": "^29.0.3",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.9.3"
+    "ts-node": "^10.9.1"
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
     "@types/node": "^18.11.11",
     "joi-extract-type": "^15.0.8",
     "prometheus-query": "^3.3.0",
+    "typescript": "^4.9.5",
     "werelogs": "scality/werelogs"
   },
   "engines": {
