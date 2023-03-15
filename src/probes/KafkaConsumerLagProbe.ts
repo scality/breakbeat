@@ -2,11 +2,7 @@ import * as joi from '@hapi/joi';
 import 'joi-extract-type';
 
 import { PrometheusQueryProbe } from './PrometheusQueryProbe';
-import { PrometheusClient, prometheusClientConfigSchema } from './PrometheusClient';
-
-import { Logger } from 'werelogs';
-
-const log = new Logger('breakbeat:probe:kafkaConsumerLag');
+import { prometheusClientConfigSchema } from './PrometheusClient';
 
 export const kafkaConsumerLagProbeSchema = joi.object({
     type: joi.string().valid('kafkaConsumerLag').required(),
@@ -30,7 +26,7 @@ export class KafkaConsumerLagProbe extends PrometheusQueryProbe {
         }`;
 
         super({
-            type: "prometheusQuery",
+            type: 'prometheusQuery',
             prometheus: config.prometheus,
             query: q,
             threshold: config.wantTotalLagLessThan,
