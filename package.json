@@ -1,6 +1,6 @@
 {
   "name": "breakbeat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Overload Protection",
   "main": "lib/index.js",
   "repository": "https://github.com/scality/breakbeat",
