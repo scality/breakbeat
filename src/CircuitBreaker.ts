@@ -1,3 +1,4 @@
+import { EventEmitter } from 'stream';
 import { Config, defaultProbeEvaluateInterval, defaultStabilizeAfterNSuccesses, validate } from './Configuration';
 import { Probe, buildProbe } from './probes';
 
@@ -7,7 +8,7 @@ export enum BreakerState {
     Tripped = 2,
 }
 
-export class CircuitBreaker {
+export class CircuitBreaker extends EventEmitter {
     _config: Config;
     _probes: Probe[];
 
@@ -25,6 +26,8 @@ export class CircuitBreaker {
     _evaluatingPromiseHook: Promise<unknown> | null;
 
     constructor(config: unknown) {
+        super();
+
         this._config = validate(config);
         this._probes = (this._config.probes || []).map(buildProbe);
 
@@ -65,6 +68,8 @@ export class CircuitBreaker {
 
         const allOk = this._probes.every(probe => probe.value);
 
+        const initialState = this._aggregateState;
+
         if (allOk) {
             switch (this._aggregateState) {
             case BreakerState.Tripped:
@@ -85,6 +90,12 @@ export class CircuitBreaker {
             }
         } else {
             this._aggregateState = BreakerState.Tripped;
+        }
+
+        if (initialState !== this._aggregateState) {
+            process.nextTick(() => {
+                this.emit('state-changed', this._aggregateState);
+            });
         }
 
         // only schedule next if start was called before

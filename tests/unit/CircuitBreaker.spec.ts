@@ -151,6 +151,104 @@ describe('CircuitBreaker', () => {
             expect(b._evaluateTimeoutHandle).toBeFalsy();
             expect(s).not.toBeCalled();
         });
+
+        [
+            {
+                it: 'Nominal -> Nominal',
+                initialState: BreakerState.Nominal,
+                isStateNominal: true,
+            },
+            {
+                it: 'Stabilizing -> Stabilizing',
+                initialState: BreakerState.Stabilizing,
+                isStateNominal: true,
+            },
+            {
+                it: 'Tripped -> Tripped',
+                initialState: BreakerState.Tripped,
+                isStateNominal: false,
+            },
+        ].forEach(args => {
+            test(`should not call evaluation callback if the state didn't change : ${args.it}`, async () => {
+                const config = {
+                    probes: [
+                        {
+                            type: 'noop',
+                            returnConstantValue: args.isStateNominal,
+                        },
+                    ],
+                    stabilizeAfterNSuccesses: 2,
+                };
+                
+                b = new CircuitBreaker(config);
+
+                b._aggregateState = args.initialState;
+                
+                const handler = jest.fn();
+                b.once('state-changed', handler);
+                
+                await b._evaluate();
+                expect(b._evaluateTimeoutHandle).toBeFalsy();
+                expect(handler).not.toBeCalled();
+            });
+        });
+
+        [
+            {
+                it: 'Nominal -> Tripped',
+                initialState: BreakerState.Nominal,
+                finalState: BreakerState.Tripped,
+                isStateNominal: false,
+            },
+            {
+                it: 'Tripped -> Stabilizing',
+                initialState: BreakerState.Tripped,
+                finalState: BreakerState.Stabilizing,
+                isStateNominal: true,
+            },
+            {
+                it: 'Stabilizing -> Nominal',
+                initialState: BreakerState.Stabilizing,
+                finalState: BreakerState.Nominal,
+                isStateNominal: true,
+            },
+            {
+                it: 'Stabilizing -> Tripped',
+                initialState: BreakerState.Stabilizing,
+                finalState: BreakerState.Tripped,
+                isStateNominal: false,
+            },
+        ].forEach(args => {
+            test(`should call evaluation callback if the state changed : ${args.it}`, async () => {
+                jest.useFakeTimers();
+
+                const config = {
+                    probes: [
+                        {
+                            type: 'noop',
+                            returnConstantValue: args.isStateNominal,
+                        },
+                    ],
+                    stabilizeAfterNSuccesses: 1,
+                };
+                
+                b = new CircuitBreaker(config);
+    
+                b._aggregateState = args.initialState;
+
+                const handler = jest.fn(state => {
+                    expect(state).toStrictEqual(args.finalState);
+                });
+                b.once('state-changed', handler);
+                
+                await b._evaluate();
+                expect(b._evaluateTimeoutHandle).toBeFalsy();
+
+                jest.runAllTicks();
+                expect(handler).toBeCalled();
+            });
+        });
+
     });
 
     describe('start', () => {
