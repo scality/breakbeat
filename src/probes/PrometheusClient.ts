@@ -47,11 +47,10 @@ export class PrometheusClient {
             if (series.length == 0) {
                 return null;
             }
-
             return series[0].value.value;
         } catch (error: unknown) {
             log.error('unable to query prometheus', { error });
-            return null;
+            throw new Error('Failed to query Prometheus');
         }
     }
 }

@@ -24,12 +24,14 @@ export class CircuitBreaker extends EventEmitter {
     // a promise that unit tests can await on, as jest's fake timers
     // get confused with async flows
     _evaluatingPromiseHook: Promise<unknown> | null;
+    _failedProbes: boolean;
 
     constructor(config: unknown) {
         super();
 
         this._config = validate(config);
         this._probes = (this._config.probes || []).map(buildProbe);
+        this._failedProbes = false;
 
         this._aggregateState = BreakerState.Nominal;
         this._stabilizingCounter = 0;
@@ -49,6 +51,10 @@ export class CircuitBreaker extends EventEmitter {
         return this._aggregateState;
     }
 
+    get failedProbes(): boolean {
+        return this._failedProbes;
+    }
+
     start() {
         this._aggregateState = BreakerState.Nominal;
         this._scheduleNextEvaluation();
@@ -62,12 +68,14 @@ export class CircuitBreaker extends EventEmitter {
     }
 
     async _evaluate() {
-        this._evaluatingPromiseHook = Promise.allSettled(this._probes.map(p => p.check()));
+        this._failedProbes = false;
+        this._evaluatingPromiseHook = Promise.allSettled(this._probes.map(p => p.check().catch(() => {
+            this._failedProbes = true;
+        })));
         await this._evaluatingPromiseHook;
         this._evaluatingPromiseHook = null;
 
         const allOk = this._probes.every(probe => probe.value);
-
         const initialState = this._aggregateState;
 
         if (allOk) {
@@ -84,14 +92,12 @@ export class CircuitBreaker extends EventEmitter {
                     this._aggregateState = BreakerState.Nominal;
                 }
                 break;
-
             default:
                 break;
             }
         } else {
             this._aggregateState = BreakerState.Tripped;
         }
-
         if (initialState !== this._aggregateState) {
             process.nextTick(() => {
                 this.emit('state-changed', this._aggregateState);
