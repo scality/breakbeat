@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, jest } from '@jest/globa
 
 import { CircuitBreaker, BreakerState } from '../../src/CircuitBreaker';
 import { defaultProbeEvaluateInterval } from '../../src/Configuration';
+import { PrometheusClient } from '../../src/probes/PrometheusClient';
 
 describe('CircuitBreaker', () => {
     let b: CircuitBreaker;
@@ -133,6 +134,29 @@ describe('CircuitBreaker', () => {
             await b._evaluate();
             expect(b._evaluateTimeoutHandle).toBeTruthy();
             expect(s).toBeCalled();
+        });
+
+        test('should set _failedProbes to true when a probe fails', async () => {
+            const spy = jest.spyOn(PrometheusClient.prototype, 'instantQuery').mockRejectedValue(new Error('Failed to query Prometheus'));
+            const config = {
+                probes: [
+                    {
+                        type: 'prometheusQuery',
+                        prometheus: {
+                            endpoint: 'http://localhost:9090',
+                            timeout: 3000,
+                        },
+                        query: 'up',
+                        threshold: 1,
+                        averagedOverInterval: '1m',
+                    },
+                ],
+            };
+            const circuitBreaker = new CircuitBreaker(config);
+            await circuitBreaker._evaluate();
+            expect(circuitBreaker._failedProbes).toBe(true);
+
+            spy.mockRestore();
         });
 
         test('should not schedule next evaluation if not started', async () => {
