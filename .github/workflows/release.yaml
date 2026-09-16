@@ -1,0 +1,181 @@
+---
+name: release
+run-name: release ${{ inputs.tag }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to be pushed to registry'
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Reject disallowed branch
+        if: ${{ !startsWith(github.ref, 'refs/heads/development/') && !startsWith(github.ref, 'refs/heads/hotfix/') }}
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          echo "::error::Releases must run from a development/* or hotfix/* branch (got $REF_NAME)"
+          exit 1
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Fail if tag does not match package.json version
+        id: version
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          version=$(jq -r .version package.json)
+          if [ -z "$version" ] || [ "$version" = "null" ]; then
+            echo "::error::No version found in package.json"
+            exit 1
+          fi
+          if [ "$TAG" != "v$version" ]; then
+            echo "::error::Tag '$TAG' does not match package.json version, expected 'v$version'"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if release already exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release $TAG already exists"
+            exit 1
+          fi
+
+      - name: Fail if tag already exists
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG already exists (possibly on a different commit); refusing to move it"
+            exit 1
+          fi
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Build
+        run: yarn build
+
+      - name: Pack tarball
+        run: npm pack --ignore-scripts
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: '*.tgz'
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: package
+          path: '*.tgz'
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-github:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Download package artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: package
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@scality'
+
+      - name: Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          if [ -n "$(npm view "@scality/breakbeat@$VERSION" version 2>/dev/null)" ]; then
+            echo "::notice::@scality/breakbeat@$VERSION already on GitHub Packages; skipping"
+          else
+            npm publish ./*.tgz --tag "latest-${VERSION%.*}"
+          fi
+
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download package artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: package
+
+      - name: Install NodeJS
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@scality'
+
+      # Authenticates via OIDC, which needs a trusted publisher configured on
+      # npmjs for this package first -- only possible once it already exists
+      # there, so the initial version has to be published manually.
+      - name: Publish to npm
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          if [ -n "$(npm view "@scality/breakbeat@$VERSION" version 2>/dev/null)" ]; then
+            echo "::notice::@scality/breakbeat@$VERSION already on npm; skipping"
+          else
+            npm publish ./*.tgz --provenance --tag "latest-${VERSION%.*}"
+          fi
+
+  release:
+    needs: [build, publish-github, publish-npm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          name: ${{ inputs.tag }}
+          tag_name: ${{ inputs.tag }}
+          generate_release_notes: true
+          append_body: true
+          body: |
+            GitHub Packages: https://github.com/${{ github.repository }}/pkgs/npm/breakbeat
+            npm: https://www.npmjs.com/package/@scality/breakbeat
+          target_commitish: ${{ github.sha }}
