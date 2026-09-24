@@ -1,20 +1,22 @@
-import * as joi from '@hapi/joi';
-import 'joi-extract-type';
+import * as joi from 'joi';
 
 import { PrometheusDriver } from 'prometheus-query';
 import { Logger } from 'werelogs';
 
 const log = new Logger('breakbeat:prometheusClient');
 
-export const prometheusClientConfigSchema = joi.object({
+export interface PrometheusClientConfig {
+    endpoint: string;
+    timeout?: number;
+}
+
+export const prometheusClientConfigSchema = joi.object<PrometheusClientConfig, true>({
     endpoint: joi.string().uri({
         scheme: ['http', 'https'],
         allowRelative: false,
     }).required(),
     timeout: joi.number().optional(),
 });
-
-export type PrometheusClientConfig = joi.extractType<typeof prometheusClientConfigSchema>;
 
 type InstantResult = {
     value: {

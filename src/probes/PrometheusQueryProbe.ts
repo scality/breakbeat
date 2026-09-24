@@ -1,15 +1,22 @@
-import * as joi from '@hapi/joi';
-import 'joi-extract-type';
+import * as joi from 'joi';
 
 import { Probe } from './Probe';
-import { PrometheusClient, prometheusClientConfigSchema } from './PrometheusClient';
+import { PrometheusClient, PrometheusClientConfig, prometheusClientConfigSchema } from './PrometheusClient';
 
 import { Logger } from 'werelogs';
 
 const log = new Logger('breakbeat:probe:prometheusQuery');
 
-export const prometheusQueryProbeSchema = joi.object({
-    type: joi.string().valid('prometheusQuery').required(),
+export interface PrometheusQueryProbeConfig {
+    type: 'prometheusQuery';
+    prometheus: PrometheusClientConfig;
+    query: string;
+    threshold: number;
+    averagedOverInterval?: string;
+}
+
+export const prometheusQueryProbeSchema = joi.object<PrometheusQueryProbeConfig, true>({
+    type: joi.string().valid('prometheusQuery' satisfies PrometheusQueryProbeConfig['type']).required(),
 
     prometheus: prometheusClientConfigSchema.required(),
 
@@ -17,8 +24,6 @@ export const prometheusQueryProbeSchema = joi.object({
     threshold: joi.number().required(),
     averagedOverInterval: joi.string().regex(new RegExp('^\\d+[smhd]$')).optional(),
 });
-
-export type PrometheusQueryProbeConfig = joi.extractType<typeof prometheusQueryProbeSchema>;
 
 export class PrometheusQueryProbe implements Probe {
     config: PrometheusQueryProbeConfig;

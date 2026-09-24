@@ -1,11 +1,19 @@
-import * as joi from '@hapi/joi';
-import 'joi-extract-type';
+import * as joi from 'joi';
 
 import { PrometheusQueryProbe } from './PrometheusQueryProbe';
-import { prometheusClientConfigSchema } from './PrometheusClient';
+import { PrometheusClientConfig, prometheusClientConfigSchema } from './PrometheusClient';
 
-export const kafkaConsumerLagProbeSchema = joi.object({
-    type: joi.string().valid('kafkaConsumerLag').required(),
+export interface KafkaConsumerLagProbeConfig {
+    type: 'kafkaConsumerLag';
+    prometheus: PrometheusClientConfig;
+    wantTotalLagLessThan: number;
+    averagedOverInterval?: string;
+    consumerGroupName: string;
+    topicName?: string;
+}
+
+export const kafkaConsumerLagProbeSchema = joi.object<KafkaConsumerLagProbeConfig, true>({
+    type: joi.string().valid('kafkaConsumerLag' satisfies KafkaConsumerLagProbeConfig['type']).required(),
 
     prometheus: prometheusClientConfigSchema.required(),
 
@@ -14,8 +22,6 @@ export const kafkaConsumerLagProbeSchema = joi.object({
     consumerGroupName: joi.string().required(),
     topicName: joi.string().optional(),
 });
-
-export type KafkaConsumerLagProbeConfig = joi.extractType<typeof kafkaConsumerLagProbeSchema>;
 
 export class KafkaConsumerLagProbe extends PrometheusQueryProbe {
     constructor(config: KafkaConsumerLagProbeConfig) {

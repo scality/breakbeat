@@ -1,13 +1,16 @@
-import * as joi from '@hapi/joi';
+import * as joi from 'joi';
 
 import { Probe } from './Probe';
 
-export const noopProbeSchema = joi.object({
-    type: joi.string().valid('noop').required(),
+export interface NoopProbeConfig {
+    type: 'noop';
+    returnConstantValue: boolean;
+}
+
+export const noopProbeSchema = joi.object<NoopProbeConfig, true>({
+    type: joi.string().valid('noop' satisfies NoopProbeConfig['type']).required(),
     returnConstantValue: joi.boolean().required(),
 });
-
-export type NoopProbeConfig = joi.extractType<typeof noopProbeSchema>;
 
 export class NoopProbe implements Probe {
     config: NoopProbeConfig;
