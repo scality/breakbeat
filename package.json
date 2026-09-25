@@ -1,6 +1,6 @@
 {
   "name": "@scality/breakbeat",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Overload Protection",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -38,9 +38,8 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@hapi/joi": "^17.1.1",
     "@types/node": "^18.11.11",
-    "joi-extract-type": "^15.0.8",
+    "joi": "^17.13.6",
     "prometheus-query": "^3.3.0",
     "werelogs": "scality/werelogs"
   },

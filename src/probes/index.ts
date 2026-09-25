@@ -1,18 +1,21 @@
-import * as joi from '@hapi/joi';
-import 'joi-extract-type';
+import * as joi from 'joi';
 
-import { NoopProbe, noopProbeSchema } from './NoopProbe';
-import { KafkaConsumerLagProbe, kafkaConsumerLagProbeSchema } from './KafkaConsumerLagProbe';
-import { PrometheusQueryProbe, prometheusQueryProbeSchema } from './PrometheusQueryProbe';
+import { NoopProbe, NoopProbeConfig, noopProbeSchema } from './NoopProbe';
+import {
+    KafkaConsumerLagProbe,
+    KafkaConsumerLagProbeConfig,
+    kafkaConsumerLagProbeSchema,
+} from './KafkaConsumerLagProbe';
+import { PrometheusQueryProbe, PrometheusQueryProbeConfig, prometheusQueryProbeSchema } from './PrometheusQueryProbe';
 import { Probe } from './Probe';
 
-const probeSchema = joi.alternatives().try(
+export type ProbeConfig = NoopProbeConfig | KafkaConsumerLagProbeConfig | PrometheusQueryProbeConfig;
+
+const probeSchema = joi.alternatives<ProbeConfig>().try(
     noopProbeSchema.required(),
     kafkaConsumerLagProbeSchema.required(),
     prometheusQueryProbeSchema.required(),
 );
-
-export type ProbeConfig = joi.extractType<typeof probeSchema>;
 
 function buildProbe(probeConfig: ProbeConfig): Probe {
     const type = probeConfig.type;

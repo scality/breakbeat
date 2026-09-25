@@ -1,20 +1,25 @@
-import * as joi from '@hapi/joi';
-import 'joi-extract-type';
+import * as joi from 'joi';
 
-import { probeSchema } from './probes';
+import { ProbeConfig, probeSchema } from './probes';
 
 export const defaultProbeEvaluateInterval = 60000;
 export const defaultStabilizeAfterNSuccesses = 2;
 
-const topSchema = joi.object({
+export interface Config {
+    probes?: ProbeConfig[];
+    nominalEvaluateIntervalMs?: number;
+    trippedEvaluateIntervalMs?: number;
+    stabilizingEvaluateIntervalMs?: number;
+    stabilizeAfterNSuccesses?: number;
+}
+
+const topSchema = joi.object<Config, true>({
     probes: joi.array().items(probeSchema).optional(),
     nominalEvaluateIntervalMs: joi.number().positive().default(defaultProbeEvaluateInterval).optional(),
     trippedEvaluateIntervalMs: joi.number().positive().default(defaultProbeEvaluateInterval).optional(),
     stabilizingEvaluateIntervalMs: joi.number().positive().default(defaultProbeEvaluateInterval).optional(),
     stabilizeAfterNSuccesses: joi.number().positive().default(defaultStabilizeAfterNSuccesses).optional(),
 });
-
-export type Config = joi.extractType<typeof topSchema>;
 
 export function validate(config: unknown): Config {
     if (!config) {
@@ -26,7 +31,8 @@ export function validate(config: unknown): Config {
         throw res.error;
     }
 
-    return res.value;
+    // joi's ValidationResult union is not discriminated, so `value` stays `any` here
+    return res.value as Config;
 }
 
 export const configWithDefaults = validate({});
