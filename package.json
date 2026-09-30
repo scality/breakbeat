@@ -40,7 +40,7 @@
   "dependencies": {
     "@types/node": "^18.11.11",
     "joi": "^17.13.6",
-    "prometheus-query": "^3.3.0",
+    "prometheus-query": "^3.5.1",
     "werelogs": "scality/werelogs#8.2.5"
   },
   "engines": {
