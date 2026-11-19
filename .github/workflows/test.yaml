@@ -24,6 +24,9 @@ jobs:
     - name: lint
       run: yarn --silent lint --max-warnings 0
 
+    - name: check formatting
+      run: yarn --silent prettier:check
+
     - name: build
       run: yarn --silent build
 

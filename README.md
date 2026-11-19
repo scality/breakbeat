@@ -48,3 +48,12 @@ process.on('beforeExit', (code) => {
     b.stop();
 });
 ```
+
+## Formatting
+
+Prettier formatting of the whole repository is checked in CI. Run it before
+pushing:
+
+```sh
+yarn run prettier --write .
+```
