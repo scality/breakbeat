@@ -4,30 +4,36 @@ name: tests
 on:
   push:
     branches-ignore:
-    - development/**
-    - q/*/**
+      - development/**
+      - q/*/**
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v7
-    - uses: actions/setup-node@v7
-      with:
-        node-version: '24'
-        cache: 'yarn'
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'yarn'
 
-    - name: install dependencies
-      run: yarn install --frozen-lockfile --prefer-offline
+      - name: install dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
 
-    - name: lint
-      run: yarn --silent lint
+      - name: lint
+        run: yarn --silent lint --max-warnings 0
 
-    - name: build
-      run: yarn --silent build
+      - name: lint markdown
+        run: yarn --silent lint_md
 
-    - name: test and coverage
-      run: yarn --silent coverage
+      - name: check formatting
+        run: yarn --silent prettier:check
 
-    - uses: codecov/codecov-action@v7
+      - name: build
+        run: yarn --silent build
+
+      - name: test and coverage
+        run: yarn --silent coverage
+
+      - uses: codecov/codecov-action@v7

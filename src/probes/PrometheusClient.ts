@@ -11,17 +11,20 @@ export interface PrometheusClientConfig {
 }
 
 export const prometheusClientConfigSchema = joi.object<PrometheusClientConfig, true>({
-    endpoint: joi.string().uri({
-        scheme: ['http', 'https'],
-        allowRelative: false,
-    }).required(),
+    endpoint: joi
+        .string()
+        .uri({
+            scheme: ['http', 'https'],
+            allowRelative: false,
+        })
+        .required(),
     timeout: joi.number().optional(),
 });
 
 type InstantResult = {
     value: {
-        value: number,
-    },
+        value: number;
+    };
 };
 
 export class PrometheusClient {
@@ -31,12 +34,10 @@ export class PrometheusClient {
     constructor(config: PrometheusClientConfig, q: string, interval?: string) {
         this.prom = new PrometheusDriver({
             endpoint: config.endpoint,
-            timeout:  config.timeout,
+            timeout: config.timeout,
         });
 
-        this.q = interval ?
-            `sum(avg_over_time(${q}[${interval}]))` :
-            `sum(${q})`;
+        this.q = interval ? `sum(avg_over_time(${q}[${interval}]))` : `sum(${q})`;
     }
 
     async instantQuery(): Promise<number | null> {
@@ -52,7 +53,7 @@ export class PrometheusClient {
             return series[0].value.value;
         } catch (error: unknown) {
             log.error('unable to query prometheus', { error });
-            throw new Error('Failed to query Prometheus');
+            throw new Error('Failed to query Prometheus', { cause: error });
         }
     }
 }

@@ -69,9 +69,13 @@ export class CircuitBreaker extends EventEmitter {
 
     async _evaluate() {
         this._failedProbes = false;
-        this._evaluatingPromiseHook = Promise.allSettled(this._probes.map(p => p.check().catch(() => {
-            this._failedProbes = true;
-        })));
+        this._evaluatingPromiseHook = Promise.allSettled(
+            this._probes.map(p =>
+                p.check().catch(() => {
+                    this._failedProbes = true;
+                }),
+            ),
+        );
         await this._evaluatingPromiseHook;
         this._evaluatingPromiseHook = null;
 
@@ -80,20 +84,20 @@ export class CircuitBreaker extends EventEmitter {
 
         if (allOk) {
             switch (this._aggregateState) {
-            case BreakerState.Tripped:
-                this._aggregateState = BreakerState.Stabilizing;
-                this._stabilizingCounter = 1;
-                break;
+                case BreakerState.Tripped:
+                    this._aggregateState = BreakerState.Stabilizing;
+                    this._stabilizingCounter = 1;
+                    break;
 
-            case BreakerState.Stabilizing:
-                this._stabilizingCounter++;
+                case BreakerState.Stabilizing:
+                    this._stabilizingCounter++;
 
-                if (this._stabilizingCounter >= this._stabilizeThreshold) {
-                    this._aggregateState = BreakerState.Nominal;
-                }
-                break;
-            default:
-                break;
+                    if (this._stabilizingCounter >= this._stabilizeThreshold) {
+                        this._aggregateState = BreakerState.Nominal;
+                    }
+                    break;
+                default:
+                    break;
             }
         } else {
             this._aggregateState = BreakerState.Tripped;
@@ -111,10 +115,7 @@ export class CircuitBreaker extends EventEmitter {
     }
 
     _scheduleNextEvaluation() {
-        this._evaluateTimeoutHandle = setTimeout(
-            () => void this._evaluate(),
-            this._evaluateIntervalMs,
-        );
+        this._evaluateTimeoutHandle = setTimeout(() => void this._evaluate(), this._evaluateIntervalMs);
     }
 
     get _evaluateIntervalMs(): number {

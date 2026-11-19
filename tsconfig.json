@@ -3,18 +3,12 @@
         "outDir": "./lib",
         "allowJs": false,
         "target": "es2016",
+        "lib": ["es2022", "dom"],
         "alwaysStrict": true,
         "declaration": true,
         "skipLibCheck": false,
         "module": "commonjs"
     },
-    "include": [
-        "src/*.ts",
-        "src/*/*.ts",
-        "index.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "tests"
-    ]
+    "include": ["src/*.ts", "src/*/*.ts", "index.ts"],
+    "exclude": ["node_modules", "tests"]
 }

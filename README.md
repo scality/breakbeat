@@ -43,8 +43,17 @@ const i = setInterval(() => {
     }
 }, 5000);
 
-process.on('beforeExit', (code) => {
+process.on('beforeExit', code => {
     clearInterval(i);
     b.stop();
 });
+```
+
+## Formatting
+
+Prettier formatting of the whole repository is checked in CI. Run it before
+pushing:
+
+```sh
+yarn run prettier --write .
 ```

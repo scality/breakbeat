@@ -13,7 +13,10 @@ export interface KafkaConsumerLagProbeConfig {
 }
 
 export const kafkaConsumerLagProbeSchema = joi.object<KafkaConsumerLagProbeConfig, true>({
-    type: joi.string().valid('kafkaConsumerLag' satisfies KafkaConsumerLagProbeConfig['type']).required(),
+    type: joi
+        .string()
+        .valid('kafkaConsumerLag' satisfies KafkaConsumerLagProbeConfig['type'])
+        .required(),
 
     prometheus: prometheusClientConfigSchema.required(),
 

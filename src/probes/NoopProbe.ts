@@ -8,7 +8,10 @@ export interface NoopProbeConfig {
 }
 
 export const noopProbeSchema = joi.object<NoopProbeConfig, true>({
-    type: joi.string().valid('noop' satisfies NoopProbeConfig['type']).required(),
+    type: joi
+        .string()
+        .valid('noop' satisfies NoopProbeConfig['type'])
+        .required(),
     returnConstantValue: joi.boolean().required(),
 });
 
