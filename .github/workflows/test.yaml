@@ -22,7 +22,7 @@ jobs:
       run: yarn install --frozen-lockfile --prefer-offline
 
     - name: lint
-      run: yarn --silent lint
+      run: yarn --silent lint --max-warnings 0
 
     - name: build
       run: yarn --silent build
