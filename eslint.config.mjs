@@ -6,6 +6,12 @@ import { jest } from '@scality/eslint-config-scality/testing';
 export default defineConfig(
     ...scality,
     {
+        files: ['**/*.js'],
+        languageOptions: {
+            sourceType: 'commonjs',
+        },
+    },
+    {
         files: [tseslint.globs.ts],
         extends: [tseslint.configs.recommendedTypeChecked],
         languageOptions: {
