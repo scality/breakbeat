@@ -9,13 +9,6 @@
         "skipLibCheck": false,
         "module": "commonjs"
     },
-    "include": [
-        "src/*.ts",
-        "src/*/*.ts",
-        "index.ts"
-    ],
-    "exclude": [
-        "node_modules",
-        "tests"
-    ]
+    "include": ["src/*.ts", "src/*/*.ts", "index.ts"],
+    "exclude": ["node_modules", "tests"]
 }

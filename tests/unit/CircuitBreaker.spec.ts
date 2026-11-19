@@ -137,7 +137,9 @@ describe('CircuitBreaker', () => {
         });
 
         test('should set _failedProbes to true when a probe fails', async () => {
-            const spy = jest.spyOn(PrometheusClient.prototype, 'instantQuery').mockRejectedValue(new Error('Failed to query Prometheus'));
+            const spy = jest
+                .spyOn(PrometheusClient.prototype, 'instantQuery')
+                .mockRejectedValue(new Error('Failed to query Prometheus'));
             const config = {
                 probes: [
                     {
@@ -203,14 +205,14 @@ describe('CircuitBreaker', () => {
                     ],
                     stabilizeAfterNSuccesses: 2,
                 };
-                
+
                 b = new CircuitBreaker(config);
 
                 b._aggregateState = args.initialState;
-                
+
                 const handler = jest.fn();
                 b.once('state-changed', handler);
-                
+
                 await b._evaluate();
                 expect(b._evaluateTimeoutHandle).toBeFalsy();
                 expect(handler).not.toBeCalled();
@@ -255,16 +257,16 @@ describe('CircuitBreaker', () => {
                     ],
                     stabilizeAfterNSuccesses: 1,
                 };
-                
+
                 b = new CircuitBreaker(config);
-    
+
                 b._aggregateState = args.initialState;
 
                 const handler = jest.fn(state => {
                     expect(state).toStrictEqual(args.finalState);
                 });
                 b.once('state-changed', handler);
-                
+
                 await b._evaluate();
                 expect(b._evaluateTimeoutHandle).toBeFalsy();
 
@@ -272,7 +274,6 @@ describe('CircuitBreaker', () => {
                 expect(handler).toBeCalled();
             });
         });
-
     });
 
     describe('start', () => {

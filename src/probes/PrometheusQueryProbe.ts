@@ -16,7 +16,10 @@ export interface PrometheusQueryProbeConfig {
 }
 
 export const prometheusQueryProbeSchema = joi.object<PrometheusQueryProbeConfig, true>({
-    type: joi.string().valid('prometheusQuery' satisfies PrometheusQueryProbeConfig['type']).required(),
+    type: joi
+        .string()
+        .valid('prometheusQuery' satisfies PrometheusQueryProbeConfig['type'])
+        .required(),
 
     prometheus: prometheusClientConfigSchema.required(),
 
@@ -32,8 +35,7 @@ export class PrometheusQueryProbe implements Probe {
     observed: number;
 
     constructor(config: PrometheusQueryProbeConfig) {
-        this.prometheusClient = new PrometheusClient(
-            config.prometheus, config.query, config.averagedOverInterval);
+        this.prometheusClient = new PrometheusClient(config.prometheus, config.query, config.averagedOverInterval);
         this.config = config;
         this.threshold = 0;
         this.observed = 0;
