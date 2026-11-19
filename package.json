@@ -17,6 +17,7 @@
     "build": "tsc --strict",
     "coverage": "jest --coverage --detectOpenHandles",
     "lint": "eslint $(git ls-files '*.js' '*.ts' '*.mjs' '*.cjs')",
+    "lint_md": "mdlint $(git ls-files '*.md')",
     "prepack": "yarn build",
     "prepare": "yarn build",
     "prettier:check": "prettier --check .",
