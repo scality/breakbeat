@@ -52,7 +52,7 @@ export class PrometheusClient {
             return series[0].value.value;
         } catch (error: unknown) {
             log.error('unable to query prometheus', { error });
-            throw new Error('Failed to query Prometheus');
+            throw new Error('Failed to query Prometheus', { cause: error });
         }
     }
 }
